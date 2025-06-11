@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h1>Welcome to VK Clone</h1>
+<p>A simple social network built with Flask and SQLite</p>
+
+{% if 'user_id' not in session %}
+<div class="auth-buttons">
+    <a href="{{ url_for('login') }}" class="btn">Login</a>
+    <a href="{{ url_for('register') }}" class="btn">Register</a>
+</div>
+{% endif %}
+{% endblock %}
