@@ -13,7 +13,8 @@
 4. `source venv/bin/activate`
 5. `pip install -r requirements.txt`
 6. `echo "SECRET_KEY=your_key_here" > .env`
-7. `flask run`
+7. `flask run
+8. `Open http://localhost:5000 in a web browser to start. 🎉
 
 ## 💻 Tech Stack
 - Python + Flask
@@ -23,4 +24,3 @@
 
 Run `python app.py` for socket functionality
 
-Done! Your mini-VK now runs on localhost:5000 🎉
