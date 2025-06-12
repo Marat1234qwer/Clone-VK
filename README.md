@@ -7,9 +7,9 @@
 - All data stored in SQLite
 
 ## 🚀 Quick Start
-1. `git clone github.com:Marat1234qwer/Clone-VK.git`
+1. `git clone https://github.com/Marat1234qwer/Clone-VK.git`
 2. `cd Clone-VK`
-3. `python -m venv venv`
+3. `python3 -m venv venv`
 4. `source venv/bin/activate`
 5. `pip install -r requirements.txt`
 6. `echo "SECRET_KEY=your_key_here" > .env`
