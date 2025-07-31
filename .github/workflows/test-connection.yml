@@ -55,13 +55,21 @@ jobs:
         fi
         EOF
 
-    - name: Configure YC CLI
+    # Шаг 5: Проверка подключения Configure YC CLI
+    - name: Install and configure YC CLI
       run: |
+        # Установка
+        curl -s https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+        echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
+        echo "Ok"
+
+        # Конфигурация
         echo "${{ secrets.YC_SA_KEY }}" > sa-key.json
         yc config set service-account-key sa-key.json
         yc config set folder-id b1gbg64nvnbues4n0i9k
         yc config set compute-default-zone ru-central1-a
-        echo "Ok"
+        yc config list  # Проверка настроек (опционально)
+        echo "Ok1"
         
     # # Шаг 5: Проверка сетевых портов
     # - name: Verify network connectivity
