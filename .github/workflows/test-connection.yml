@@ -8,6 +8,7 @@ env:
   SSH_PORT: 2222
   SSH_USER: admin
   DOCKER_CONTAINER_NAME: clone-vk
+  SECRET_KEY: ${{ secrets.YC_SA_KEY }} 
 
 jobs:
   test-connection:
