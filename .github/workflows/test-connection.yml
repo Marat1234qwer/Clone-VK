@@ -1,0 +1,30 @@
+name: Test Server Connection
+
+on:
+  workflow_dispatch:  # Запуск вручную через UI GitHub
+
+jobs:
+  test-connection:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check SSH access
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        
+        # Тестируем подключение
+        ssh -o StrictHostKeyChecking=no \
+            -i ~/.ssh/deploy_key \
+            -p 2222 \
+            admin@37.143.10.40 \
+            "echo 'SSH connection successful!'"
+
+    - name: Test Docker commands
+      run: |
+        ssh -i ~/.ssh/deploy_key -p 2222 admin@37.143.10.40 "
+          docker --version && \
+          echo 'Docker test successful' || \
+          echo 'Docker command failed'
+        "
