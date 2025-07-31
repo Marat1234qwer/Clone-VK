@@ -11,7 +11,7 @@ env:
 
 jobs:
   test-connection:
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     
     steps:
     # Шаг 1: Подготовка SSH-ключа
