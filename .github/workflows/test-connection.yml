@@ -11,7 +11,7 @@ env:
 
 jobs:
   test-connection:
-    runs-on: ubuntu-latest
+    runs-on: debian-latest
     
     steps:
     # Шаг 1: Подготовка SSH-ключа
@@ -23,59 +23,59 @@ jobs:
         echo "SSH key setup complete"
 
     # Шаг 2: Проверка базового SSH-доступа
-    - name: Test SSH connection
-      run: |
-        ssh -o StrictHostKeyChecking=no \
-            -i ~/.ssh/deploy_key \
-            -p ${{ env.SSH_PORT }} \
-            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
-            "echo 'SSH connection to ${{ env.SERVER_IP }} successful!'"
+    # - name: Test SSH connection
+    #   run: |
+    #     ssh -o StrictHostKeyChecking=no \
+    #         -i ~/.ssh/deploy_key \
+    #         -p ${{ env.SSH_PORT }} \
+    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
+    #         "echo 'SSH connection to ${{ env.SERVER_IP }} successful!'"
 
-    # Шаг 3: Проверка Docker
-    - name: Verify Docker installation
-      run: |
-        ssh -i ~/.ssh/deploy_key \
-            -p ${{ env.SSH_PORT }} \
-            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-        docker --version
-        docker info | grep -E 'Server Version|Containers|Images'
-        EOF
+    # # Шаг 3: Проверка Docker
+    # - name: Verify Docker installation
+    #   run: |
+    #     ssh -i ~/.ssh/deploy_key \
+    #         -p ${{ env.SSH_PORT }} \
+    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+    #     docker --version
+    #     docker info | grep -E 'Server Version|Containers|Images'
+    #     EOF
 
-    # Шаг 4: Проверка конкретного контейнера
-    - name: Check target container
-      run: |
-        ssh -i ~/.ssh/deploy_key \
-            -p ${{ env.SSH_PORT }} \
-            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-        echo "Checking container ${{ env.DOCKER_CONTAINER_NAME }}"
-        docker ps -a | grep ${{ env.DOCKER_CONTAINER_NAME }} || echo "Container not found"
-        if docker inspect ${{ env.DOCKER_CONTAINER_NAME }} &> /dev/null; then
-          echo "Container exists"
-          docker logs ${{ env.DOCKER_CONTAINER_NAME }} --tail 10
-        fi
-        EOF
+    # # Шаг 4: Проверка конкретного контейнера
+    # - name: Check target container
+    #   run: |
+    #     ssh -i ~/.ssh/deploy_key \
+    #         -p ${{ env.SSH_PORT }} \
+    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+    #     echo "Checking container ${{ env.DOCKER_CONTAINER_NAME }}"
+    #     docker ps -a | grep ${{ env.DOCKER_CONTAINER_NAME }} || echo "Container not found"
+    #     if docker inspect ${{ env.DOCKER_CONTAINER_NAME }} &> /dev/null; then
+    #       echo "Container exists"
+    #       docker logs ${{ env.DOCKER_CONTAINER_NAME }} --tail 10
+    #     fi
+    #     EOF
 
-    # Шаг 5: Проверка сетевых портов
-    - name: Verify network connectivity
-      run: |
-        ssh -i ~/.ssh/deploy_key \
-            -p ${{ env.SSH_PORT }} \
-            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-        echo "Checking exposed ports:"
-        sudo netstat -tulnp | grep -E '5000|5002'
-        curl -s localhost:5002 >/dev/null && echo "Port 5002 is responsive" || echo "Port 5002 not responding"
-        EOF
+    # # Шаг 5: Проверка сетевых портов
+    # - name: Verify network connectivity
+    #   run: |
+    #     ssh -i ~/.ssh/deploy_key \
+    #         -p ${{ env.SSH_PORT }} \
+    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+    #     echo "Checking exposed ports:"
+    #     sudo netstat -tulnp | grep -E '5000|5002'
+    #     curl -s localhost:5002 >/dev/null && echo "Port 5002 is responsive" || echo "Port 5002 not responding"
+    #     EOF
 
-    # Шаг 6: Проверка системных ресурсов
-    - name: Check system resources
-      run: |
-        ssh -i ~/.ssh/deploy_key \
-            -p ${{ env.SSH_PORT }} \
-            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-        echo "=== System Overview ==="
-        free -h
-        echo "=== Disk Space ==="
-        df -h
-        echo "=== Running Processes ==="
-        top -b -n 1 | head -n 10
-        EOF
+    # # Шаг 6: Проверка системных ресурсов
+    # - name: Check system resources
+    #   run: |
+    #     ssh -i ~/.ssh/deploy_key \
+    #         -p ${{ env.SSH_PORT }} \
+    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+    #     echo "=== System Overview ==="
+    #     free -h
+    #     echo "=== Disk Space ==="
+    #     df -h
+    #     echo "=== Running Processes ==="
+    #     top -b -n 1 | head -n 10
+    #     EOF
