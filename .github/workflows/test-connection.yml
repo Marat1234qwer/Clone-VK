@@ -55,22 +55,51 @@ jobs:
         fi
         EOF
 
-    # Шаг 5: Проверка подключения Configure YC CLI
     - name: Install and configure YC CLI
       run: |
-        # Установка
-        curl -s https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+        # 1. Установка YC CLI (явное скачивание бинарника)
+        echo "Устанавливаем YC CLI..."
+        YC_VERSION="0.156.0"
+        wget -q https://storage.yandexcloud.net/yandexcloud-yc/release/$YC_VERSION/linux/amd64/yc -O yc
+        chmod +x yc
+        mkdir -p $HOME/yandex-cloud/bin
+        mv yc $HOME/yandex-cloud/bin/
+        
+        # 2. Явное добавление в PATH (для текущего job)
         echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
-        source "/home/runner/.bashrc"
-        echo "Ok"
-
-        # Конфигурация
+        
+        # 3. Проверка установки
+        echo "Проверяем установку..."
+        $HOME/yandex-cloud/bin/yc --version || echo "Проверка не удалась"
+        
+        # 4. Конфигурация (используем полный путь к бинарнику)
+        echo "Настраиваем YC CLI..."
         echo "${{ secrets.YC_SA_KEY }}" > sa-key.json
-        yc config set service-account-key sa-key.json
-        yc config set folder-id b1gbg64nvnbues4n0i9k
-        yc config set compute-default-zone ru-central1-a
-        yc config list  # Проверка настроек (опционально)
-        echo "Ok1"
+        $HOME/yandex-cloud/bin/yc config set service-account-key sa-key.json
+        $HOME/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
+        $HOME/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
+        
+        # 5. Проверка конфигурации
+        echo "Проверяем конфигурацию..."
+        $HOME/yandex-cloud/bin/yc config list
+        echo "✅ YC CLI успешно настроен"
+
+    # # Шаг 5: Проверка подключения Configure YC CLI
+    # - name: Install and configure YC CLI
+    #   run: |
+    #     # Установка
+    #     curl -s https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+    #     echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
+    #     source "/home/runner/.bashrc"
+    #     echo "Ok"
+
+    #     # Конфигурация
+    #     echo "${{ secrets.YC_SA_KEY }}" > sa-key.json
+    #     yc config set service-account-key sa-key.json
+    #     yc config set folder-id b1gbg64nvnbues4n0i9k
+    #     yc config set compute-default-zone ru-central1-a
+    #     yc config list  # Проверка настроек (опционально)
+    #     echo "Ok1"
         
     # # Шаг 5: Проверка сетевых портов
     # - name: Verify network connectivity
