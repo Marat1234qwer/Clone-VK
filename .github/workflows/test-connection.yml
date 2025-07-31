@@ -17,20 +17,21 @@ jobs:
     # Шаг 1: Подготовка SSH-ключа
     - name: Setup SSH key
       run: |
-        echo "Ok"
         mkdir -p ~/.ssh
         echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
         echo "SSH key setup complete"
 
     # Шаг 2: Проверка базового SSH-доступа
-    # - name: Test SSH connection
-    #   run: |
-    #     ssh -o StrictHostKeyChecking=no \
-    #         -i ~/.ssh/deploy_key \
-    #         -p ${{ env.SSH_PORT }} \
-    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
-    #         "echo 'SSH connection to ${{ env.SERVER_IP }} successful!'"
+    - name: Test SSH connection
+      run: |
+        echo "Ok"
+        ssh -o StrictHostKeyChecking=no \
+            -i ~/.ssh/deploy_key \
+            -p ${{ env.SSH_PORT }} \
+            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
+            "echo 'SSH connection to ${{ env.SERVER_IP }} successful!'"
+        echo "Ok1"
 
     # # Шаг 3: Проверка Docker
     # - name: Verify Docker installation
