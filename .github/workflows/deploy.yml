@@ -25,8 +25,6 @@ jobs:
     # Шаг 2: Настройка Yandex Cloud CLI
     - name: Configure YC CLI
       run: |
-        curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-        source ~/.bashrc
         echo "${{ secrets.YC_SA_KEY }}" > sa-key.json
         yc config set service-account-key sa-key.json
         yc config set folder-id b1gbg64nvnbues4n0i9k
