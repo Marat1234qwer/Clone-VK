@@ -17,6 +17,7 @@ jobs:
     # Шаг 1: Подготовка SSH-ключа
     - name: Setup SSH key
       run: |
+        echo "Ok"
         mkdir -p ~/.ssh
         echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
