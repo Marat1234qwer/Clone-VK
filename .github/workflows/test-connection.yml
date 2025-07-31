@@ -3,28 +3,79 @@ name: Test Server Connection
 on:
   workflow_dispatch:  # Запуск вручную через UI GitHub
 
+env:
+  SERVER_IP: 37.143.10.40
+  SSH_PORT: 2222
+  SSH_USER: admin
+  DOCKER_CONTAINER_NAME: clone-vk
+
 jobs:
   test-connection:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Check SSH access
+    # Шаг 1: Подготовка SSH-ключа
+    - name: Setup SSH key
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
-        
-        # Тестируем подключение
+        echo "SSH key setup complete"
+
+    # Шаг 2: Проверка базового SSH-доступа
+    - name: Test SSH connection
+      run: |
         ssh -o StrictHostKeyChecking=no \
             -i ~/.ssh/deploy_key \
-            -p 2222 \
-            admin@37.143.10.40 \
-            "echo 'SSH connection successful!'"
+            -p ${{ env.SSH_PORT }} \
+            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
+            "echo 'SSH connection to ${{ env.SERVER_IP }} successful!'"
 
-    - name: Test Docker commands
+    # Шаг 3: Проверка Docker
+    - name: Verify Docker installation
       run: |
-        ssh -i ~/.ssh/deploy_key -p 2222 admin@37.143.10.40 "
-          docker --version && \
-          echo 'Docker test successful' || \
-          echo 'Docker command failed'
-        "
+        ssh -i ~/.ssh/deploy_key \
+            -p ${{ env.SSH_PORT }} \
+            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+        docker --version
+        docker info | grep -E 'Server Version|Containers|Images'
+        EOF
+
+    # Шаг 4: Проверка конкретного контейнера
+    - name: Check target container
+      run: |
+        ssh -i ~/.ssh/deploy_key \
+            -p ${{ env.SSH_PORT }} \
+            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+        echo "Checking container ${{ env.DOCKER_CONTAINER_NAME }}"
+        docker ps -a | grep ${{ env.DOCKER_CONTAINER_NAME }} || echo "Container not found"
+        if docker inspect ${{ env.DOCKER_CONTAINER_NAME }} &> /dev/null; then
+          echo "Container exists"
+          docker logs ${{ env.DOCKER_CONTAINER_NAME }} --tail 10
+        fi
+        EOF
+
+    # Шаг 5: Проверка сетевых портов
+    - name: Verify network connectivity
+      run: |
+        ssh -i ~/.ssh/deploy_key \
+            -p ${{ env.SSH_PORT }} \
+            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+        echo "Checking exposed ports:"
+        sudo netstat -tulnp | grep -E '5000|5002'
+        curl -s localhost:5002 >/dev/null && echo "Port 5002 is responsive" || echo "Port 5002 not responding"
+        EOF
+
+    # Шаг 6: Проверка системных ресурсов
+    - name: Check system resources
+      run: |
+        ssh -i ~/.ssh/deploy_key \
+            -p ${{ env.SSH_PORT }} \
+            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+        echo "=== System Overview ==="
+        free -h
+        echo "=== Disk Space ==="
+        df -h
+        echo "=== Running Processes ==="
+        top -b -n 1 | head -n 10
+        EOF
