@@ -15,46 +15,61 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Install and configure YC CLI
+        run: |
+          # Установка
+          curl -s https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+          echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
+          source "/home/runner/.bashrc"
+          echo "Ok"
+  
+          # Конфигурация
+          echo '${{ secrets.YC_SA_KEY }}'' > sa-key.json
+          yc config set service-account-key sa-key.json
+          yc config set folder-id b1gbg64nvnbues4n0i9k
+          yc config set compute-default-zone ru-central1-a
+          yc config list  # Проверка настроек (опционально)
+          echo "Ok1"
     # Шаг 1: Подготовка SSH-ключа
-    - name: Setup SSH key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
-        chmod 600 ~/.ssh/deploy_key
-        echo "SSH key setup complete"
+    # - name: Setup SSH key
+    #   run: |
+    #     mkdir -p ~/.ssh
+    #     echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+    #     chmod 600 ~/.ssh/deploy_key
+    #     echo "SSH key setup complete"
 
     # Шаг 2: Проверка базового SSH-доступа
-    - name: Test SSH connection
-      run: |
-        ssh -o StrictHostKeyChecking=no \
-            -i ~/.ssh/deploy_key \
-            -p ${{ env.SSH_PORT }} \
-            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
-            "echo 'SSH connection to ${{ env.SERVER_IP }} successful!'"
+    # - name: Test SSH connection
+    #   run: |
+    #     ssh -o StrictHostKeyChecking=no \
+    #         -i ~/.ssh/deploy_key \
+    #         -p ${{ env.SSH_PORT }} \
+    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
+    #         "echo 'SSH connection to ${{ env.SERVER_IP }} successful!'"
 
     # Шаг 3: Проверка Docker
-    - name: Verify Docker installation
-      run: |
-        ssh -i ~/.ssh/deploy_key \
-            -p ${{ env.SSH_PORT }} \
-            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-        docker --version
-        docker info | grep -E 'Server Version|Containers|Images'
-        EOF
+    # - name: Verify Docker installation
+    #   run: |
+    #     ssh -i ~/.ssh/deploy_key \
+    #         -p ${{ env.SSH_PORT }} \
+    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+    #     docker --version
+    #     docker info | grep -E 'Server Version|Containers|Images'
+    #     EOF
 
-    # Шаг 4: Проверка конкретного контейнера
-    - name: Check target container
-      run: |
-        ssh -i ~/.ssh/deploy_key \
-            -p ${{ env.SSH_PORT }} \
-            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-        echo "Checking container ${{ env.DOCKER_CONTAINER_NAME }}"
-        docker ps -a | grep ${{ env.DOCKER_CONTAINER_NAME }} || echo "Container not found"
-        if docker inspect ${{ env.DOCKER_CONTAINER_NAME }} &> /dev/null; then
-          echo "Container exists"
-          docker logs ${{ env.DOCKER_CONTAINER_NAME }} --tail 10
-        fi
-        EOF
+    # # Шаг 4: Проверка конкретного контейнера
+    # - name: Check target container
+    #   run: |
+    #     ssh -i ~/.ssh/deploy_key \
+    #         -p ${{ env.SSH_PORT }} \
+    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
+    #     echo "Checking container ${{ env.DOCKER_CONTAINER_NAME }}"
+    #     docker ps -a | grep ${{ env.DOCKER_CONTAINER_NAME }} || echo "Container not found"
+    #     if docker inspect ${{ env.DOCKER_CONTAINER_NAME }} &> /dev/null; then
+    #       echo "Container exists"
+    #       docker logs ${{ env.DOCKER_CONTAINER_NAME }} --tail 10
+    #     fi
+    #     EOF
 
     # - name: Check Key Format
     #   run: |
