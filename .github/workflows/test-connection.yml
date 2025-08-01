@@ -39,19 +39,17 @@ jobs:
         /home/runner/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
         /home/runner/yandex-cloud/bin/yc config list  # Проверка настроек (опционально)
 
-    - name: Build Docker image
-      run: |
-        docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
+    # - name: Build Docker image
+    #   run: |
+    #     docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
 
     - name: Login to YCR
       run: |
-        echo "${{ secrets.YC_SA_KEY }}" | docker login \
+        # 2. Получаем IAM-токен (используем полный путь к yc)
+        IAM_TOKEN=$(/home/runner/yandex-cloud/bin/yc iam create-token)
+        
+        # 3. Логинимся в реестр
+        echo "$IAM_TOKEN" | docker login \
           --username iam \
           --password-stdin \
-          ${{ env.REGISTRY }}
-
-    # Шаг 5: Публикация образа в YCR
-    - name: Push to YCR
-      run: |
-        docker push ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
-        echo 'Ok'
+          cr.yandex
