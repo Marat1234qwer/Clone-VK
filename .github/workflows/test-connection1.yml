@@ -22,9 +22,10 @@ jobs:
     - name: Install YC CLI
       run: |
         curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
-        source /home/runner/.bashrc
+        /home/runner/yandex-cloud/bin/yc --version
+        # source /home/runner/.bashrc
         # echo 'source /home/runner/yandex-cloud/completion.zsh.inc' >>  ~/.zshrc
-        yc --version
+        # yc --version
     #     curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i -b ~/yc-bin
     #     echo "~/yc-bin" >> $GITHUB_PATH
         
