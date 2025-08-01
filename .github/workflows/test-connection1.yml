@@ -28,8 +28,8 @@ jobs:
         yc --version
 
       # Настройка сервисного аккаунта
-    # - name: Configure YC CLI
-    #   run: |
-    #     echo '${{ secrets.YC_SA_KEY }}' > key.json
-    #     yc config set service-account-key key.json
-    #     yc config list  # Проверка конфигурации (опционально)
+    - name: Configure YC CLI
+      run: |
+        yc config set service-account-key key.json
+        yc config list  # Проверка конфигурации (опционально)
+        echo "Ok"
