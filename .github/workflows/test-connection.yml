@@ -39,9 +39,9 @@ jobs:
         /home/runner/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
         /home/runner/yandex-cloud/bin/yc config list  # Проверка настроек (опционально)
 
-    # - name: Build Docker image
-    #   run: |
-    #     docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
 
     - name: Login to YCR
       run: |
@@ -53,3 +53,30 @@ jobs:
           --username iam \
           --password-stdin \
           cr.yandex
+
+
+
+    # Шаг 5: Публикация образа в YCR
+    - name: Push to YCR
+      run: |
+        docker push ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
+
+
+
+
+    # Шаг 6: Деплой на production-сервер
+    - name: Deploy to Server
+      run: |
+        ssh -o StrictHostKeyChecking=no \
+            -i <(echo "${{ secrets.SERVER_SSH_KEY }}") \
+            -p ${{ env.SSH_PORT }} \
+            ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "
+          # Обновляем образ и перезапускаем контейнер
+          docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+          docker stop ${{ env.IMAGE_NAME }} || true && \
+          docker rm ${{ env.IMAGE_NAME }} || true && \
+          docker run -d \
+            --name ${{ env.IMAGE_NAME }} \
+            --restart unless-stopped \
+            -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
+            ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest"
