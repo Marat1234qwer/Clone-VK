@@ -17,5 +17,17 @@ jobs:
         ls -la key.json
         cat key.json | jq empty  # Проверка валидности JSON (если установлен jq)
 
-    - name: Configure YC CLI
-      run: yc config set service-account-key key.json
+    # - name: Configure YC CLI
+    #   run: yc config set service-account-key key.json
+    - name: Install YC CLI
+      run: |
+        curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+        echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH  # Добавляем yc в PATH
+        echo "Installed YC CLI version: $($HOME/yandex-cloud/bin/yc --version)"
+
+      # Настройка сервисного аккаунта
+    # - name: Configure YC CLI
+    #   run: |
+    #     echo '${{ secrets.YC_SA_KEY }}' > key.json
+    #     yc config set service-account-key key.json
+    #     yc config list  # Проверка конфигурации (опционально)
