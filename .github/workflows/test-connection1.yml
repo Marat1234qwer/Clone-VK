@@ -26,10 +26,6 @@ jobs:
         echo "Installed YC CLI version: $($HOME/yandex-cloud/bin/yc --version)"
         source "/home/runner/.bashrc"
         yc --version
-
-      # Настройка сервисного аккаунта
-    - name: Configure YC CLI
-      run: |
         yc config set service-account-key key.json
         yc config list  # Проверка конфигурации (опционально)
         echo "Ok"
