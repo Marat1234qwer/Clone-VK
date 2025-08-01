@@ -21,11 +21,16 @@ jobs:
     #   run: yc config set service-account-key key.json
     - name: Install YC CLI
       run: |
-        curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
-        echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH  # Добавляем yc в PATH
-        echo "Installed YC CLI version: $($HOME/yandex-cloud/bin/yc --version)"
-        source "/home/runner/.bashrc"
-        yc --version
-        yc config set service-account-key key.json
-        yc config list  # Проверка конфигурации (опционально)
-        echo "Ok"
+        # Установка yc с явным указанием директории установки
+        curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i -b ~/yc-bin
+        echo "~/yc-bin" >> $GITHUB_PATH
+        
+    - name: Configure YC CLI
+      run: |
+        # Используем полный путь к yc
+        ~/yc-bin/yc config set service-account-key key.json
+        ~/yc-bin/yc config list
+        
+        # Проверяем доступность yc через PATH
+        which yc || echo "yc not in PATH"
+        yc --version || echo "Failed to run yc from PATH"
