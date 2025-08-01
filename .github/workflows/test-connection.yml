@@ -60,7 +60,7 @@ jobs:
     # Шаг 5: Публикация образа в YCR
     - name: Push to YCR
       run: |
-        docker push ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
+        docker push ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
 
 
 
@@ -73,7 +73,7 @@ jobs:
             -p ${{ env.SSH_PORT }} \
             ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "
           # Обновляем образ и перезапускаем контейнер
-          docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+          docker pull ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
           docker stop ${{ env.IMAGE_NAME }} || true && \
           docker rm ${{ env.IMAGE_NAME }} || true && \
           docker run -d \
