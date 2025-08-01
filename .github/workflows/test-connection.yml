@@ -2,6 +2,7 @@ name: Test Server Connection
 
 env:
   REGISTRY: cr.yandex
+  REGISTRY_ID: crpsad4gf09obkkcv8ei
   IMAGE_NAME: clone-vk
   SERVER_IP: 37.143.10.40
   SSH_PORT: 2222
@@ -79,4 +80,4 @@ jobs:
             --name ${{ env.IMAGE_NAME }} \
             --restart unless-stopped \
             -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
-            ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest"
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest"
