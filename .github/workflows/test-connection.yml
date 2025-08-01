@@ -1,151 +1,57 @@
 name: Test Server Connection
 
-on:
-  workflow_dispatch:  # Запуск вручную через UI GitHub
-
 env:
+  REGISTRY: cr.yandex
+  IMAGE_NAME: clone-vk
   SERVER_IP: 37.143.10.40
   SSH_PORT: 2222
   SSH_USER: admin
-  DOCKER_CONTAINER_NAME: clone-vk
-  SECRET_KEY: ${{ secrets.YC_SA_KEY }} 
+  CONTAINER_PORT: 5000
+  HOST_PORT: 5002
+
+on:
+  workflow_dispatch:
 
 jobs:
   test-connection:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Install and configure YC CLI
-        run: |
-          # Установка
-          curl -s https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
-          echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
-          source "/home/runner/.bashrc"
-          echo "Ok"
-  
-          # Конфигурация
-          echo '${{ secrets.YC_SA_KEY }}' > sa-key.json
-          yc config set service-account-key sa-key.json
-          yc config set folder-id b1gbg64nvnbues4n0i9k
-          yc config set compute-default-zone ru-central1-a
-          yc config list  # Проверка настроек (опционально)
-          echo "Ok1"
-    # Шаг 1: Подготовка SSH-ключа
-    # - name: Setup SSH key
-    #   run: |
-    #     mkdir -p ~/.ssh
-    #     echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
-    #     chmod 600 ~/.ssh/deploy_key
-    #     echo "SSH key setup complete"
+    # Шаг 1: Получение кода из репозитория
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    # Шаг 2: Проверка базового SSH-доступа
-    # - name: Test SSH connection
-    #   run: |
-    #     ssh -o StrictHostKeyChecking=no \
-    #         -i ~/.ssh/deploy_key \
-    #         -p ${{ env.SSH_PORT }} \
-    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
-    #         "echo 'SSH connection to ${{ env.SERVER_IP }} successful!'"
-
-    # Шаг 3: Проверка Docker
-    # - name: Verify Docker installation
-    #   run: |
-    #     ssh -i ~/.ssh/deploy_key \
-    #         -p ${{ env.SSH_PORT }} \
-    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-    #     docker --version
-    #     docker info | grep -E 'Server Version|Containers|Images'
-    #     EOF
-
-    # # Шаг 4: Проверка конкретного контейнера
-    # - name: Check target container
-    #   run: |
-    #     ssh -i ~/.ssh/deploy_key \
-    #         -p ${{ env.SSH_PORT }} \
-    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-    #     echo "Checking container ${{ env.DOCKER_CONTAINER_NAME }}"
-    #     docker ps -a | grep ${{ env.DOCKER_CONTAINER_NAME }} || echo "Container not found"
-    #     if docker inspect ${{ env.DOCKER_CONTAINER_NAME }} &> /dev/null; then
-    #       echo "Container exists"
-    #       docker logs ${{ env.DOCKER_CONTAINER_NAME }} --tail 10
-    #     fi
-    #     EOF
-
-    # - name: Check Key Format
-    #   run: |
-    #     if [[ "${SECRET_KEY}" == '{"'* ]]; then
-    #       echo "Key appears to be JSON format"
-    #     else
-    #       echo "Key is not in JSON format"
-    #     fi
-    
-    # - name: Install and configure YC CLI
-    #   run: |
-    #     # 1. Установка YC CLI
-    #     echo "Installing YC CLI..."
-    #     YC_VERSION="0.156.0"
-    #     wget -q https://storage.yandexcloud.net/yandexcloud-yc/release/$YC_VERSION/linux/amd64/yc -O yc
-    #     chmod +x yc
-    #     mkdir -p $HOME/yandex-cloud/bin
-    #     mv yc $HOME/yandex-cloud/bin/
-    #     echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
-    #     echo "Ok"
-    #     # 2. Проверка ключа перед использованием
-    #     echo "Validating service account key..."
-    #     echo "${{ secrets.YC_SA_KEY }}" > sa-key.json
-    #     if ! jq empty sa-key.json; then
-    #       echo "❌ Invalid JSON format in YC_SA_KEY"
-    #       exit 1
-    #     fi
-    #     # 3. Конфигурация YC CLI
-    #     echo "Configuring YC CLI..."
-    #     $HOME/yandex-cloud/bin/yc config set service-account-key sa-key.json
-    #     $HOME/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
-    #     $HOME/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
-    
-        # # 4. Проверка конфигурации
-        # echo "Configuration details:"
-        # $HOME/yandex-cloud/bin/yc config list
-        # echo "✅ YC CLI successfully configured"
-
-    # # Шаг 5: Проверка подключения Configure YC CLI
-    # - name: Install and configure YC CLI
-    #   run: |
-    #     # Установка
-    #     curl -s https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
-    #     echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
-    #     source "/home/runner/.bashrc"
-    #     echo "Ok"
-
-    #     # Конфигурация
-    #     echo "${{ secrets.YC_SA_KEY }}" > sa-key.json
-    #     yc config set service-account-key sa-key.json
-    #     yc config set folder-id b1gbg64nvnbues4n0i9k
-    #     yc config set compute-default-zone ru-central1-a
-    #     yc config list  # Проверка настроек (опционально)
-    #     echo "Ok1"
+    - name: Setup SSH key
+      run: |
+        # Создаем файл ключа и записываем в него содержимое секрета
+        echo '${{ secrets.YC_SA_KEY }}' > key.json  # Используем одинарные кавычки!
         
-    # # Шаг 5: Проверка сетевых портов
-    # - name: Verify network connectivity
-    #   run: |
-    #     ssh -i ~/.ssh/deploy_key \
-    #         -p ${{ env.SSH_PORT }} \
-    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-    #     echo "Checking exposed ports:"
-    #     sudo netstat -tulnp | grep -E '5000|5002'
-    #     curl -s localhost:5002 >/dev/null && echo "Port 5002 is responsive" || echo "Port 5002 not responding"
-    #     EOF
+        # Проверяем, что файл создан (опционально)
+        # ls -la key.json
+        # cat key.json | jq empty  # Проверка валидности JSON (если установлен jq)
 
-    # # Шаг 6: Проверка системных ресурсов
-    # - name: Check system resources
-    #   run: |
-    #     ssh -i ~/.ssh/deploy_key \
-    #         -p ${{ env.SSH_PORT }} \
-    #         ${{ env.SSH_USER }}@${{ env.SERVER_IP }} << 'EOF'
-    #     echo "=== System Overview ==="
-    #     free -h
-    #     echo "=== Disk Space ==="
-    #     df -h
-    #     echo "=== Running Processes ==="
-    #     top -b -n 1 | head -n 10
-    #     EOF
+    - name: Install YC CLI
+      run: |
+        curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+        /home/runner/yandex-cloud/bin/yc --version
+        /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
+        /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
+        /home/runner/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
+        /home/runner/yandex-cloud/bin/yc config list  # Проверка настроек (опционально)
+
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
+
+    - name: Login to YCR
+      run: |
+        echo "${{ secrets.YC_SA_KEY }}" | docker login \
+          --username iam \
+          --password-stdin \
+          ${{ env.REGISTRY }}
+
+    # Шаг 5: Публикация образа в YCR
+    - name: Push to YCR
+      run: |
+        docker push ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
+        echo 'Ok'
