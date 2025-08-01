@@ -16,3 +16,6 @@ jobs:
         # Проверяем, что файл создан (опционально)
         ls -la key.json
         cat key.json | jq empty  # Проверка валидности JSON (если установлен jq)
+
+    - name: Configure YC CLI
+      run: yc config set service-account-key key.json
