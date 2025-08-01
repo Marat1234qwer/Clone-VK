@@ -79,29 +79,29 @@ jobs:
     #       echo "Key is not in JSON format"
     #     fi
     
-    - name: Install and configure YC CLI
-      run: |
-        # 1. Установка YC CLI
-        echo "Installing YC CLI..."
-        YC_VERSION="0.156.0"
-        wget -q https://storage.yandexcloud.net/yandexcloud-yc/release/$YC_VERSION/linux/amd64/yc -O yc
-        chmod +x yc
-        mkdir -p $HOME/yandex-cloud/bin
-        mv yc $HOME/yandex-cloud/bin/
-        echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
-        echo "Ok"
-        # 2. Проверка ключа перед использованием
-        echo "Validating service account key..."
-        echo "${{ secrets.YC_SA_KEY }}" > sa-key.json
-        if ! jq empty sa-key.json; then
-          echo "❌ Invalid JSON format in YC_SA_KEY"
-          exit 1
-        fi
-        # 3. Конфигурация YC CLI
-        echo "Configuring YC CLI..."
-        $HOME/yandex-cloud/bin/yc config set service-account-key sa-key.json
-        $HOME/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
-        $HOME/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
+    # - name: Install and configure YC CLI
+    #   run: |
+    #     # 1. Установка YC CLI
+    #     echo "Installing YC CLI..."
+    #     YC_VERSION="0.156.0"
+    #     wget -q https://storage.yandexcloud.net/yandexcloud-yc/release/$YC_VERSION/linux/amd64/yc -O yc
+    #     chmod +x yc
+    #     mkdir -p $HOME/yandex-cloud/bin
+    #     mv yc $HOME/yandex-cloud/bin/
+    #     echo "$HOME/yandex-cloud/bin" >> $GITHUB_PATH
+    #     echo "Ok"
+    #     # 2. Проверка ключа перед использованием
+    #     echo "Validating service account key..."
+    #     echo "${{ secrets.YC_SA_KEY }}" > sa-key.json
+    #     if ! jq empty sa-key.json; then
+    #       echo "❌ Invalid JSON format in YC_SA_KEY"
+    #       exit 1
+    #     fi
+    #     # 3. Конфигурация YC CLI
+    #     echo "Configuring YC CLI..."
+    #     $HOME/yandex-cloud/bin/yc config set service-account-key sa-key.json
+    #     $HOME/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
+    #     $HOME/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
     
         # # 4. Проверка конфигурации
         # echo "Configuration details:"
