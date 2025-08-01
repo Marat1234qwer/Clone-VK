@@ -1,7 +1,7 @@
 name: Test Server Connection 1
 
 on:
-  workflow_dispatch:  # Запуск вручную через UI GitHub
+  workflow_dispatch:
 
 jobs:
   test-connection:
@@ -10,4 +10,9 @@ jobs:
     steps:
     - name: Setup SSH key
       run: |
-        echo "${{ secrets.YC_SA_KEY }}"
+        # Создаем файл ключа и записываем в него содержимое секрета
+        echo '${{ secrets.YC_SA_KEY }}' > key.json  # Используем одинарные кавычки!
+        
+        # Проверяем, что файл создан (опционально)
+        ls -la key.json
+        cat key.json | jq empty  # Проверка валидности JSON (если установлен jq)
