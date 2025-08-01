@@ -1,0 +1,13 @@
+name: Test Server Connection 1
+
+on:
+  workflow_dispatch:  # Запуск вручную через UI GitHub
+
+jobs:
+  test-connection:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Setup SSH key
+      run: |
+        echo "${{ secrets.YC_SA_KEY }}"
