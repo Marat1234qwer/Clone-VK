@@ -25,9 +25,11 @@ jobs:
         /home/runner/yandex-cloud/bin/yc --version
         /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
         echo "Ok"
-        
+        /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
+        /home/runner/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
+        /home/runner/yandex-cloud/bin/yc config list  # Проверка настроек (опционально)
+        echo "Ok1"
         # yc config set folder-id b1gbg64nvnbues4n0i9k
         # yc config set compute-default-zone ru-central1-a
         # yc config list  # Проверка настроек (опционально)
-        # echo "Ok1"
 
