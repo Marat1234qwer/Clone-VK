@@ -18,7 +18,40 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Check key
+        # Шаг 1: Получение кода из репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
         run: |
-          echo "Registry ID from secrets: ${{ secrets.REGISTRY_ID || 'NOT_SET' }}"
-    
+          # Создаем файл ключа и записываем в него содержимое секрета
+          echo '${{ secrets.YC_SA_KEY }}' > key.json  # Используем одинарные кавычки!
+          
+          # Проверяем, что файл создан (опционально)
+          # ls -la key.json
+          # cat key.json | jq empty  # Проверка валидности JSON (если установлен jq)
+
+      - name: Install YC CLI
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+          /home/runner/yandex-cloud/bin/yc --version
+          /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
+          /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
+          /home/runner/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
+          /home/runner/yandex-cloud/bin/yc config list  # Проверка настроек (опционально)
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
+
+      - name: Login to YCR
+        run: |
+          # 2. Получаем IAM-токен (используем полный путь к yc)
+          IAM_TOKEN=$(/home/runner/yandex-cloud/bin/yc iam create-token)
+          
+          # 3. Логинимся в реестр
+          echo "$IAM_TOKEN" | docker login \
+            --username iam \
+            --password-stdin \
+            cr.yandex
+          echo 'Ok'
