@@ -69,7 +69,7 @@ jobs:
         fi
 
         # Дополнительная проверка доступности реестра
-        echo "Testing registry access..."
-        docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/hello-world 2>/dev/null || true
+        # echo "Testing registry access..."
+        # docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/hello-world 2>/dev/null || true
       env:
         REGISTRY: cr.yandex
