@@ -22,7 +22,7 @@ jobs:
         run: |
           # Создаем временный файл для SSH ключа
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519 
+          echo '${{ secrets.SSH_PRIVATE_KEY }}' > ~/.ssh/id_ed25519 
           chmod 600 ~/.ssh/id_ed25519
           
           # Добавляем сервер в known_hosts
