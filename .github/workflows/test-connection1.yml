@@ -20,5 +20,5 @@ jobs:
     steps:
       - name: Check key
         run: |
-          echo '${{ secrets.REGISTRY_ID }}' > registry_id
-          cat registry_id
+          echo "Registry ID from secrets: ${{ secrets.REGISTRY_ID || 'NOT_SET' }}"
+    
