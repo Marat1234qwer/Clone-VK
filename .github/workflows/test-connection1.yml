@@ -41,20 +41,8 @@ jobs:
         # - name: Login to Yandex Container Registry
       id: ycr-login
       run: |
-        # Проверяем что секрет существует
-        if [ -z "${{ secrets.YC_SA_KEY }}" ]; then
-          echo "::error::YC_SA_KEY secret is not set"
-          exit 1
-        fi
-
-        # Проверяем что переменные окружения установлены
-        if [ -z "${{ env.REGISTRY }}" ] || [ -z "${{ secrets.REGISTRY_ID }}" ]; then
-          echo "::error::REGISTRY or REGISTRY_ID is not set"
-          exit 1
-        fi
-
         # Пробуем авторизоваться
-        echo "${{ secrets.YC_SA_KEY }}" | docker login \
+        echo '${{ secrets.YC_SA_KEY }}' | docker login \
           --username iam \
           --password-stdin \
           ${{ env.REGISTRY }}
@@ -67,9 +55,3 @@ jobs:
           echo "::notice::Successfully logged in to Yandex Container Registry"
           echo "registry_url=${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}" >> $GITHUB_OUTPUT
         fi
-
-        # Дополнительная проверка доступности реестра
-        # echo "Testing registry access..."
-        # docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/hello-world 2>/dev/null || true
-      env:
-        REGISTRY: cr.yandex
