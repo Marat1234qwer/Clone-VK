@@ -18,15 +18,26 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
+      - name: SSH Deployment
         run: |
-          # Создаем временный файл для SSH ключа
+          # Создаем .ssh директорию
           mkdir -p ~/.ssh
-          echo '${{ secrets.SSH_PRIVATE_KEY }}' > ~/.ssh/id_ed25519 
-          chmod 600 ~/.ssh/id_ed25519
+          chmod 700 ~/.ssh
+          
+          # Сохраняем приватный ключ с правильным форматом
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           
           # Добавляем сервер в known_hosts
           ssh-keyscan -p ${{ env.SSH_PORT }} ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
           
-          # Проверяем подключение
-          ssh -v -p ${{ env.SSH_PORT }} ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "echo 'SSH connection successful'"
+          # Проверяем формат ключа
+          ssh-keygen -l -f ~/.ssh/deploy_key || true
+          
+          # Подключаемся с явным указанием ключа
+          ssh -vvv -i ~/.ssh/deploy_key \
+              -p ${{ env.SSH_PORT }} \
+              -o StrictHostKeyChecking=yes \
+              ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
+              "echo 'SSH connection successful'"
