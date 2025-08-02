@@ -18,11 +18,58 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Setup SSH key
+      run: |
+        # Создаем файл ключа и записываем в него содержимое секрета
+        echo '${{ secrets.YC_SA_KEY }}' > key.json  # Используем одинарные кавычки!
+        
+        # Проверяем, что файл создан (опционально)
+        # ls -la key.json
+        # cat key.json | jq empty  # Проверка валидности JSON (если установлен jq)
 
-      - name: Build and Inspect Docker image
-        run: |
-          docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
-          docker image inspect ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
-          # docker run --rm ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest --version
+    - name: Install YC CLI
+      run: |
+        curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+        /home/runner/yandex-cloud/bin/yc --version
+        /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
+        /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
+        /home/runner/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
+        /home/runner/yandex-cloud/bin/yc config list  # Проверка настроек (опционально)
+
+    - name: Login to YCR
+      # run: |
+        # - name: Login to Yandex Container Registry
+      id: ycr-login
+      run: |
+        # Проверяем что секрет существует
+        if [ -z "${{ secrets.YC_SA_KEY }}" ]; then
+          echo "::error::YC_SA_KEY secret is not set"
+          exit 1
+        fi
+
+        # Проверяем что переменные окружения установлены
+        if [ -z "${{ env.REGISTRY }}" ] || [ -z "${{ secrets.REGISTRY_ID }}" ]; then
+          echo "::error::REGISTRY or REGISTRY_ID is not set"
+          exit 1
+        fi
+
+        # Пробуем авторизоваться
+        echo "${{ secrets.YC_SA_KEY }}" | docker login \
+          --username iam \
+          --password-stdin \
+          ${{ env.REGISTRY }}
+
+        # Проверяем успешность авторизации
+        if [ $? -ne 0 ]; then
+          echo "::error::Failed to login to Yandex Container Registry"
+          exit 1
+        else
+          echo "::notice::Successfully logged in to Yandex Container Registry"
+          echo "registry_url=${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}" >> $GITHUB_OUTPUT
+        fi
+
+        # Дополнительная проверка доступности реестра
+        echo "Testing registry access..."
+        docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/hello-world 2>/dev/null || true
+      env:
+        REGISTRY: cr.yandex
