@@ -27,3 +27,4 @@ jobs:
           # Создаем файл ключа и записываем в него содержимое секрета
           echo '${{ secrets.YC_SA_KEY }}' > key.json  # Используем одинарные кавычки!
           echo '${{ secrets.YC_SA_KEY }}'
+          cat key.json
