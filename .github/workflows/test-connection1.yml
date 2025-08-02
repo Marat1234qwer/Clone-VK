@@ -46,7 +46,7 @@ jobs:
 
       - name: Login to YCR
         run: |
-          echo "${{ secrets.YC_SA_KEY }}" | docker login \
+          echo '${{ secrets.YC_SA_KEY }}' | docker login \
             --username iam \
             --password-stdin \
             ${{ env.REGISTRY }}
