@@ -1,5 +1,15 @@
 name: Test Server Connection 1
 
+env:
+  REGISTRY: cr.yandex
+  REGISTRY_ID: crpsad4gf09obkkcv8ei
+  IMAGE_NAME: clone-vk
+  SERVER_IP: 37.143.10.40
+  SSH_PORT: 2222
+  SSH_USER: admin
+  CONTAINER_PORT: 5000
+  HOST_PORT: 5002
+
 on:
   workflow_dispatch:
 
@@ -8,28 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Setup SSH key
-      run: |
-        # Создаем файл ключа и записываем в него содержимое секрета
-        echo '${{ secrets.YC_SA_KEY }}' > key.json  # Используем одинарные кавычки!
-        
-        # Проверяем, что файл создан (опционально)
-        ls -la key.json
-        cat key.json | jq empty  # Проверка валидности JSON (если установлен jq)
-
-    # - name: Configure YC CLI
-    #   run: yc config set service-account-key key.json
-    - name: Install YC CLI
-      run: |
-        curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
-        /home/runner/yandex-cloud/bin/yc --version
-        /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
-        echo "Ok"
-        /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
-        /home/runner/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
-        /home/runner/yandex-cloud/bin/yc config list  # Проверка настроек (опционально)
-        echo "Ok1"
-        # yc config set folder-id b1gbg64nvnbues4n0i9k
-        # yc config set compute-default-zone ru-central1-a
-        # yc config list  # Проверка настроек (опционально)
-
+      - name: check key
+        run: |
+          echo "secrets.REGISTRY_ID"
