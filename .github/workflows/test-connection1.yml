@@ -26,5 +26,27 @@ jobs:
         run: |
           # Создаем файл ключа и записываем в него содержимое секрета
           echo '${{ secrets.YC_SA_KEY }}' > key.json  # Используем одинарные кавычки!
-          echo '${{ secrets.YC_SA_KEY }}'
-          cat key.json
+
+          # Проверяем, что файл создан (опционально)
+          # ls -la key.json
+          # cat key.json | jq empty  # Проверка валидности JSON (если установлен jq)
+
+      - name: Install YC CLI
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+          /home/runner/yandex-cloud/bin/yc --version
+          /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
+          /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
+          /home/runner/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
+          /home/runner/yandex-cloud/bin/yc config list  # Проверка настроек (опционально)
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
+
+      - name: Login to YCR
+        run: |
+          echo "${{ secrets.YC_SA_KEY }}" | docker login \
+            --username iam \
+            --password-stdin \
+            ${{ env.REGISTRY }}
