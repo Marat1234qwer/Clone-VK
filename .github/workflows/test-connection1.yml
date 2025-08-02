@@ -42,7 +42,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
+          docker build -t ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
 
       - name: Login to YCR
         run: |
@@ -54,4 +54,9 @@ jobs:
             --username iam \
             --password-stdin \
             cr.yandex
+
+      # Шаг 5: Публикация образа в YCR
+      - name: Push to YCR
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
           echo 'Ok'
