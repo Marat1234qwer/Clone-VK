@@ -57,3 +57,19 @@ jobs:
           docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
           docker image inspect ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+              -i <(echo "${{ secrets.SERVER_SSH_KEY }}") \
+              -p ${{ env.SSH_PORT }} \
+              ${{ env.SSH_USER }}@${{ env.SERVER_IP }} "
+            # Обновляем образ и перезапускаем контейнер
+            docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+            docker stop ${{ env.IMAGE_NAME }} || true && \
+            docker rm ${{ env.IMAGE_NAME }} || true && \
+            docker run -d \
+              --name ${{ env.IMAGE_NAME }} \
+              --restart unless-stopped \
+              -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
+              ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest"
