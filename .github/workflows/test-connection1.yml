@@ -20,4 +20,5 @@ jobs:
     steps:
       - name: Check key
         run: |
-          echo '${{ secrets.REGISTRY_ID }}'
+          echo '${{ secrets.REGISTRY_ID }}' > registry_id
+          cat registry_id
