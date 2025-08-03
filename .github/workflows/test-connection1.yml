@@ -11,7 +11,8 @@ env:
   HOST_PORT: 5002
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
   test-connection:
