@@ -105,7 +105,6 @@ jobs:
                docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
                (docker stop ${{ env.IMAGE_NAME }} || true) && \
                (docker rm ${{ env.IMAGE_NAME }} || true) && \
-               echo \"SECRET_KEY=your_key_here\" > .env && \
                docker run -d \
                  --name ${{ env.IMAGE_NAME }} \
                  --restart unless-stopped \
