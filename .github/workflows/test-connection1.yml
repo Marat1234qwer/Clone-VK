@@ -25,7 +25,7 @@ jobs:
           chmod 700 ~/.ssh
           
           # Сохраняем приватный ключ с правильным форматом
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           
           # Добавляем сервер в known_hosts
