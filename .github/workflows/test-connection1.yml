@@ -73,16 +73,27 @@ jobs:
           ssh-keygen -l -f ~/.ssh/deploy_key || true
           
           # Подключаемся с явным указанием ключа
-          ssh -vvv -i ~/.ssh/deploy_key \
+          # ssh -vvv -i ~/.ssh/deploy_key \
+          #     -p ${{ env.SSH_PORT }} \
+          #     -o StrictHostKeyChecking=yes \
+          #     ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
+          #     "echo 'SSH connection successful'"
+          # docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+          # docker stop ${{ env.IMAGE_NAME }} || true && \
+          # docker rm ${{ env.IMAGE_NAME }} || true && \
+          # docker run -d \
+          #   --name ${{ env.IMAGE_NAME }} \
+          #   --restart unless-stopped \
+          #   -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
+          #   ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
+          ssh -i ~/.ssh/deploy_key \
               -p ${{ env.SSH_PORT }} \
-              -o StrictHostKeyChecking=yes \
               ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
-              "echo 'SSH connection successful'"
-          docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
-          docker stop ${{ env.IMAGE_NAME }} || true && \
-          docker rm ${{ env.IMAGE_NAME }} || true && \
-          docker run -d \
-            --name ${{ env.IMAGE_NAME }} \
-            --restart unless-stopped \
-            -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
-            ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
+              "docker pull ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+               (docker stop ${{ env.IMAGE_NAME }} || true) && \
+               (docker rm ${{ env.IMAGE_NAME }} || true) && \
+               docker run -d \
+                 --name ${{ env.IMAGE_NAME }} \
+                 --restart unless-stopped \
+                 -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
+                 ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest"
