@@ -2,13 +2,13 @@ name: Test Server Connection 1
 
 env:
   REGISTRY: cr.yandex
-  REGISTRY_ID: crpsad4gf09obkkcv8ei
+  REGISTRY_ID: crpsad4gf09obkkcv8ei  # Убедитесь, что это совпадает с secrets.REGISTRY_ID!
   IMAGE_NAME: clone-vk
   SERVER_IP: 37.143.10.40
   SSH_PORT: 2222
   SSH_USER: admin
   CONTAINER_PORT: 5000
-  HOST_PORT: 5002
+  HOST_PORT: 5002  # Проверьте, свободен ли этот порт на сервере!
 
 on:
   push:
@@ -24,63 +24,40 @@ jobs:
         
       - name: Setup SSH key
         run: |
-          # Создаем файл ключа и записываем в него содержимое секрета
-          echo '${{ secrets.YC_SA_KEY }}' > key.json  # Используем одинарные кавычки!
+          echo '${{ secrets.YC_SA_KEY }}' > key.json
+          chmod 600 key.json
 
       - name: Install YC CLI
         run: |
           curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
-          /home/runner/yandex-cloud/bin/yc --version
           /home/runner/yandex-cloud/bin/yc config profile create github-actions
           /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
           /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
-          /home/runner/yandex-cloud/bin/yc config set compute-default-zone ru-central1-a
           /home/runner/yandex-cloud/bin/yc config set cloud-id ${{ secrets.REGISTRY_ID }}
-
-          /home/runner/yandex-cloud/bin/yc config list  # Проверка настроек (опционально)
 
       - name: Login to YCR
         run: |
-          IAM_TOKEN=$(/home/runner/yandex-cloud/bin/yc iam create-token --profile=github-actions)
-          
-          # Логин в Container Registry
-          echo "$IAM_TOKEN" | docker login \
-            --username iam \
-            --password-stdin \
-            cr.yandex
+          IAM_TOKEN=$(/home/runner/yandex-cloud/bin/yc iam create-token)
+          echo "$IAM_TOKEN" | docker login --username iam --password-stdin cr.yandex
         
-      - name: Build Docker image
+      - name: Build and Push Docker image
         run: |
           docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
-          docker image inspect ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
-
 
       - name: SSH Deployment
         run: |
-          # Создаем .ssh директорию
           mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          
-          # Сохраняем приватный ключ с правильным форматом
           echo "${{ secrets.SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          
-          # Добавляем сервер в known_hosts
           ssh-keyscan -p ${{ env.SSH_PORT }} ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-          
-          # Проверяем формат ключа
-          ssh-keygen -l -f ~/.ssh/deploy_key || true
           
           ssh -i ~/.ssh/deploy_key \
               -p ${{ env.SSH_PORT }} \
               ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
-              "IAM_TOKEN=\$(/home/admin/yandex-cloud/bin/yc iam create-token) && \
-               echo \$IAM_TOKEN | docker login --username iam --password-stdin cr.yandex && \
-               docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
-               (docker stop ${{ env.IMAGE_NAME }} || true) && \
-               (docker rm ${{ env.IMAGE_NAME }} || true) && \
+              "docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+               docker stop ${{ env.IMAGE_NAME }} || true && \
+               docker rm ${{ env.IMAGE_NAME }} || true && \
                docker run -d \
                  --name ${{ env.IMAGE_NAME }} \
                  --restart unless-stopped \
