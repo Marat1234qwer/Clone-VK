@@ -1,0 +1,73 @@
+name: Test Server Connection 1
+
+env:
+  REGISTRY: cr.yandex
+  REGISTRY_ID: crpsad4gf09obkkcv8ei
+  IMAGE_NAME: clone-vk
+  SERVER_IP: 37.143.10.40
+  SSH_PORT: 2222
+  SSH_USER: admin
+  CONTAINER_PORT: 5000
+  HOST_PORT: 5002
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test-connection:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup SSH key
+        run: |
+          echo '${{ secrets.YC_SA_KEY }}' > key.json
+          chmod 600 key.json
+
+      - name: Install YC CLI
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
+          /home/runner/yandex-cloud/bin/yc config profile create github-actions
+          /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
+          /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
+          # УБЕРИТЕ эту строку - cloud-id не нужен для registry
+          # /home/runner/yandex-cloud/bin/yc config set cloud-id ${{ secrets.REGISTRY_ID }}
+
+      - name: Login to YCR
+        run: |
+          IAM_TOKEN=$(/home/runner/yandex-cloud/bin/yc iam create-token)
+          echo $IAM_TOKEN | docker login --username iam --password-stdin cr.yandex
+        
+      - name: Build and Push Docker image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
+          docker push ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: SSH Deployment
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ env.SSH_PORT }} ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
+          
+          ssh -i ~/.ssh/deploy_key \
+              -p ${{ env.SSH_PORT }} \
+              ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
+              "echo 'Logging in to Yandex Container Registry...' && \
+               IAM_TOKEN=\$(curl -s -H 'Metadata-Flavor: Google' 'http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token' | jq -r .access_token) && \
+               echo \$IAM_TOKEN | docker login --username iam --password-stdin cr.yandex && \
+               echo 'Pulling new image...' && \
+               docker pull ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+               echo 'Stopping and removing old container...' && \
+               docker stop ${{ env.IMAGE_NAME }} 2>/dev/null || true && \
+               docker rm ${{ env.IMAGE_NAME }} 2>/dev/null || true && \
+               echo 'Starting new container...' && \
+               docker run -d \
+                 --name ${{ env.IMAGE_NAME }} \
+                 --restart unless-stopped \
+                 -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
+                 ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+               echo 'Deployment completed successfully!'"
