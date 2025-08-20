@@ -52,14 +52,22 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ env.SSH_PORT }} ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
           
+          # Передаем IAM токен с GitHub runner на сервер
+          IAM_TOKEN=$(/home/runner/yandex-cloud/bin/yc iam create-token)
+          
           ssh -i ~/.ssh/deploy_key \
               -p ${{ env.SSH_PORT }} \
               ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
-              "docker stop ${{ env.IMAGE_NAME }} || true && \
-               docker rm ${{ env.IMAGE_NAME }} || true && \
-               docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
-               docker run -d \
-                 --name ${{ env.IMAGE_NAME }} \
-                 --restart unless-stopped \
-                 -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
-                 ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest"
+              "echo '$IAM_TOKEN' | docker login --username iam --password-stdin cr.yandex && \
+              echo 'Stopping and removing old container...' && \
+              docker stop ${{ env.IMAGE_NAME }} 2>/dev/null || true && \
+              docker rm ${{ env.IMAGE_NAME }} 2>/dev/null || true && \
+              echo 'Pulling new image...' && \
+              docker pull ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+              echo 'Starting new container...' && \
+              docker run -d \
+                --name ${{ env.IMAGE_NAME }} \
+                --restart unless-stopped \
+                -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
+                ${{ env.REGISTRY }}/${{ env.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
+              echo 'Deployment completed successfully!'"
