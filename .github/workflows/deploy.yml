@@ -55,9 +55,9 @@ jobs:
           ssh -i ~/.ssh/deploy_key \
               -p ${{ env.SSH_PORT }} \
               ${{ env.SSH_USER }}@${{ env.SERVER_IP }} \
-              "docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
-               docker stop ${{ env.IMAGE_NAME }} || true && \
+              "docker stop ${{ env.IMAGE_NAME }} || true && \
                docker rm ${{ env.IMAGE_NAME }} || true && \
+               docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
                docker run -d \
                  --name ${{ env.IMAGE_NAME }} \
                  --restart unless-stopped \
