@@ -33,7 +33,6 @@ jobs:
           /home/runner/yandex-cloud/bin/yc config profile create github-actions
           /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
           /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
-          /home/runner/yandex-cloud/bin/yc config set cloud-id ${{ secrets.REGISTRY_ID }}
 
       - name: Login to YCR
         run: |
