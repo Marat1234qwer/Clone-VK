@@ -1,69 +1,163 @@
 {% extends "base.html" %}
 
+{% block title %}Лента новостей — Connect{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>Your Feed</h1>
-    
-    <form id="post-form" onsubmit="return submitPost()">
-        <textarea name="content" id="post-content" required></textarea>
-        <button type="submit">Post</button>
+<!-- Создание поста -->
+<div class="post-creator">
+    <h3 style="margin-bottom: 16px; color: var(--gray-800);">Что у вас нового?</h3>
+    <form id="postForm" method="POST" action="{{ url_for('create_post') }}">
+        <input type="text" name="title" class="form-input" placeholder="Заголовок поста..." required style="margin-bottom: 12px;">
+        <textarea name="content" class="post-input" placeholder="Поделитесь своими мыслями..." required></textarea>
+        <div class="post-actions">
+            <div style="display: flex; gap: 12px;">
+                <button type="button" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 6px; transition: var(--transition);">
+                    <span style="font-size: 18px;">📷</span>
+                </button>
+                <button type="button" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 6px; transition: var(--transition);">
+                    <span style="font-size: 18px;">🎵</span>
+                </button>
+                <button type="button" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 6px; transition: var(--transition);">
+                    <span style="font-size: 18px;">📍</span>
+                </button>
+            </div>
+            <button type="submit" class="post-button">Опубликовать</button>
+        </div>
     </form>
-    
-    <div id="posts-container">
+</div>
+
+<!-- Лента постов -->
+<div id="postsContainer">
+    {% if posts %}
         {% for post in posts %}
         <div class="post">
             <div class="post-header">
-                <a href="/profile/{{ post.author.username }}">
-                    {{ post.author.username }}
-                </a>
-                <span>{{ post.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+                <div class="post-avatar">{{ post[4][0]|upper }}</div>
+                <div>
+                    <div class="post-author">{{ post[4] }}</div>
+                    <div class="post-time">{{ post[3].strftime('%d %b %Y в %H:%M') }}</div>
+                </div>
             </div>
-            <div class="post-content">{{ post.content }}</div>
+            <div class="post-content">
+                <h3 class="post-title">{{ post[1] }}</h3>
+                <p class="post-text">{{ post[2] }}</p>
+            </div>
+            <div class="post-footer">
+                <a href="#" class="post-action">
+                    <span>👍</span>
+                    <span>Нравится</span>
+                </a>
+                <a href="#" class="post-action">
+                    <span>💬</span>
+                    <span>Комментировать</span>
+                </a>
+                <a href="#" class="post-action">
+                    <span>↗️</span>
+                    <span>Поделиться</span>
+                </a>
+            </div>
         </div>
         {% endfor %}
-    </div>
+    {% else %}
+        <div class="post">
+            <div class="post-content" style="text-align: center; padding: 40px;">
+                <h3 style="color: var(--gray-400); margin-bottom: 16px;">Лента пуста</h3>
+                <p style="color: var(--gray-400);">Будьте первым, кто поделится новостью!</p>
+            </div>
+        </div>
+    {% endif %}
 </div>
 
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
 <script>
     const socket = io();
     
-    socket.on('new_post', function(post) {
-        const postHtml = `
-            <div class="post">
-                <div class="post-header">
-                    <a href="/profile/${post.username}">
-                        ${post.username}
-                    </a>
-                    <span>${post.timestamp}</span>
-                </div>
-                <div class="post-content">${post.content}</div>
-            </div>
-        `;
-        document.getElementById('posts-container').insertAdjacentHTML('afterbegin', postHtml);
+    socket.on('connect', () => {
+        console.log('Connected to WebSocket');
+        socket.emit('request_feed');
     });
     
-    function submitPost() {
-        const content = document.getElementById('post-content').value;
+    socket.on('feed_update', (data) => {
+        const container = document.getElementById('postsContainer');
+        container.innerHTML = '';
         
-        fetch('/create_post', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `content=${encodeURIComponent(content)}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-            } else {
-                document.getElementById('post-content').value = '';
-            }
-        })
-        .catch(error => console.error('Error:', error));
-        
-        return false;
-    }
+        if (data.posts && data.posts.length > 0) {
+            data.posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                postElement.innerHTML = `
+                    <div class="post-header">
+                        <div class="post-avatar">${post.username[0].toUpperCase()}</div>
+                        <div>
+                            <div class="post-author">${post.username}</div>
+                            <div class="post-time">${new Date(post.timestamp).toLocaleString('ru-RU')}</div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        <h3 class="post-title">${post.title}</h3>
+                        <p class="post-text">${post.content}</p>
+                    </div>
+                    <div class="post-footer">
+                        <a href="#" class="post-action">
+                            <span>👍</span>
+                            <span>Нравится</span>
+                        </a>
+                        <a href="#" class="post-action">
+                            <span>💬</span>
+                            <span>Комментировать</span>
+                        </a>
+                        <a href="#" class="post-action">
+                            <span>↗️</span>
+                            <span>Поделиться</span>
+                        </a>
+                    </div>
+                `;
+                container.appendChild(postElement);
+            });
+        } else {
+            container.innerHTML = `
+                <div class="post">
+                    <div class="post-content" style="text-align: center; padding: 40px;">
+                        <h3 style="color: var(--gray-400); margin-bottom: 16px;">Лента пуста</h3>
+                        <p style="color: var(--gray-400);">Будьте первым, кто поделится новостью!</p>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    socket.on('new_post', (post) => {
+        const container = document.getElementById('postsContainer');
+        const postElement = document.createElement('div');
+        postElement.className = 'post';
+        postElement.innerHTML = `
+            <div class="post-header">
+                <div class="post-avatar">${post.username[0].toUpperCase()}</div>
+                <div>
+                    <div class="post-author">${post.username}</div>
+                    <div class="post-time">${new Date(post.timestamp).toLocaleString('ru-RU')}</div>
+                </div>
+            </div>
+            <div class="post-content">
+                <h3 class="post-title">${post.title}</h3>
+                <p class="post-text">${post.content}</p>
+            </div>
+            <div class="post-footer">
+                <a href="#" class="post-action">
+                    <span>👍</span>
+                    <span>Нравится</span>
+                </a>
+                <a href="#" class="post-action">
+                    <span>💬</span>
+                    <span>Комментировать</span>
+                </a>
+                <a href="#" class="post-action">
+                    <span>↗️</span>
+                    <span>Поделиться</span>
+                </a>
+            </div>
+        `;
+        container.prepend(postElement);
+    });
 </script>
 {% endblock %}
