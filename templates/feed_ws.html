@@ -10,17 +10,6 @@
         <input type="text" name="title" class="form-input" placeholder="Заголовок поста..." required style="margin-bottom: 12px;">
         <textarea name="content" class="post-input" placeholder="Поделитесь своими мыслями..." required></textarea>
         <div class="post-actions">
-            <div style="display: flex; gap: 12px;">
-                <button type="button" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 6px; transition: var(--transition);">
-                    <span style="font-size: 18px;">📷</span>
-                </button>
-                <button type="button" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 6px; transition: var(--transition);">
-                    <span style="font-size: 18px;">🎵</span>
-                </button>
-                <button type="button" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 6px; transition: var(--transition);">
-                    <span style="font-size: 18px;">📍</span>
-                </button>
-            </div>
             <button type="submit" class="post-button">Опубликовать</button>
         </div>
     </form>
@@ -41,20 +30,6 @@
             <div class="post-content">
                 <h3 class="post-title">{{ post[1] }}</h3>
                 <p class="post-text">{{ post[2] }}</p>
-            </div>
-            <div class="post-footer">
-                <a href="#" class="post-action">
-                    <span>👍</span>
-                    <span>Нравится</span>
-                </a>
-                <a href="#" class="post-action">
-                    <span>💬</span>
-                    <span>Комментировать</span>
-                </a>
-                <a href="#" class="post-action">
-                    <span>↗️</span>
-                    <span>Поделиться</span>
-                </a>
             </div>
         </div>
         {% endfor %}

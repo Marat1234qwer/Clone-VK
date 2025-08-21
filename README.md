@@ -1,25 +1,24 @@
-# Clone VK - Mini Social Network on Flask
+# Mini-App "VK Clone" on Flask
 
-## 🔥 Key Features
-- User registration/login
-- Create posts visible to everyone
-- Real-time updates without refresh (WebSocket)
-- All data stored in SQLite
+## Project Description
 
-## 🚀 Quick Start
-1. `git clone https://github.com/Marat1234qwer/Clone-VK.git`
-2. `cd Clone-VK`
-3. `python3 -m venv venv`
-4. `source venv/bin/activate`
-5. `pip install -r requirements.txt`
-6. `flask run`
-7. `Open http://localhost:5000 in a web browser to start.` 🎉
+The mini-app is a simplified version of the VKontakte social network, implemented on Flask using modern technologies:
 
-## 💻 Tech Stack
-- Python + Flask
-- SQLite database
-- SocketIO for real-time
+### Technology Stack:
+- **Backend**: Flask + Flask-SocketIO
+- **Database**: PostgreSQL
+- **Web Sockets**: Socket.IO for real-time updates
+- **Frontend**: HTML/CSS/JS + Jinja2 templates
 
+## Core Features
 
-Run `python app.py` for socket functionality
+### 1. Authentication System
+- New user registration
+- Session-based authorization
+- Password hashing (bcrypt)
+- Logout functionality
 
+### 2. Post System
+- Creation of text posts
+- News feed display
+- Real-time updates via WebSocket

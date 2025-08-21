@@ -3,9 +3,8 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>Test 4</h1>
 <h1>Welcome to VK Clone</h1>
-<p>A simple social network built with Flask and SQLite</p>
+<p>A simple social network built with Flask and PostgreSQL</p>
 
 {% if 'user_id' not in session %}
 <div class="auth-buttons">
@@ -13,4 +12,27 @@
     <a href="{{ url_for('register') }}" class="btn">Register</a>
 </div>
 {% endif %}
+
+<div class="features">
+    <h2>Core Features</h2>
+    
+    <div class="feature">
+        <h3>1. Authentication System</h3>
+        <ul>
+            <li>New user registration</li>
+            <li>Session-based authorization</li>
+            <li>Password hashing (bcrypt)</li>
+            <li>Logout functionality</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>2. Post System</h3>
+        <ul>
+            <li>Creation of text posts</li>
+            <li>News feed display</li>
+            <li>Real-time updates via WebSocket</li>
+        </ul>
+    </div>
+</div>
 {% endblock %}
