@@ -41,6 +41,15 @@ jobs:
           ssh -i ~/.ssh/deploy_key \
               -p ${{ secrets.SSH_PORT }} \
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+              cat > /app/.env << EOL
+              FLASK_SECRET_KEY=${{ secrets.FLASK_SECRET_KEY }}
+              DB_HOST=${{ secrets.DB_HOST }}
+              DB_NAME=${{ secrets.DB_NAME }}
+              DB_USER=${{ secrets.DB_USER }}
+              DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+              DB_PORT=${{ secrets.DB_PORT }}
+              DB_SSLMODE=${{ secrets.DB_SSLMODE }}
+              EOL
           set -e  # Выход при ошибке
           
           echo "Loading Docker image..."
@@ -55,6 +64,7 @@ jobs:
             --name clone-vk \
             --restart unless-stopped \
             -p 5002:5000 \
+            --env-file /app/.env \
             clone-vk:latest
           
           echo "Cleaning up..."

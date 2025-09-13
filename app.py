@@ -1,18 +1,24 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_socketio import SocketIO, emit
 import psycopg2
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = '1234'
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'fallback_secret_key')
 
+# Конфигурация БД из переменных окружения
 DB_CONFIG = {
-    "host": "37.143.10.40",
-    "database": "postgres",
-    "user": "postgres",
-    "password": "postgres",
-    "port": "5432",
-    "sslmode": "require"  
+    "host": os.getenv('DB_HOST'),
+    "database": os.getenv('DB_NAME'),
+    "user": os.getenv('DB_USER'),
+    "password": os.getenv('DB_PASSWORD'),
+    "port": os.getenv('DB_PORT'),
+    "sslmode": os.getenv('DB_SSLMODE')
 }
 
 socketio = SocketIO(app)
