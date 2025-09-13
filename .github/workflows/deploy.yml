@@ -1,11 +1,9 @@
 name: Test Server Connection 1
 
 env:
-  REGISTRY: cr.yandex
   IMAGE_NAME: clone-vk
-  #SSH_USER: admin
   CONTAINER_PORT: 5000
-  HOST_PORT: 5002  # Проверьте, свободен ли этот порт на сервере!
+  HOST_PORT: 5002
 
 on:
   push:
@@ -18,53 +16,54 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:latest .
         
-      - name: Setup SSH key
-        run: |
-          echo '${{ secrets.YC_SA_KEY }}' > key.json
-          chmod 600 key.json
-
-      - name: Install YC CLI
-        run: |
-          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i
-          /home/runner/yandex-cloud/bin/yc config profile create github-actions
-          /home/runner/yandex-cloud/bin/yc config set service-account-key key.json
-          /home/runner/yandex-cloud/bin/yc config set folder-id b1gbg64nvnbues4n0i9k
-          /home/runner/yandex-cloud/bin/yc config set cloud-id ${{ secrets.REGISTRY_ID }}
-
-      - name: Login to YCR
-        run: |
-          IAM_TOKEN=$(/home/runner/yandex-cloud/bin/yc iam create-token)
-          echo "$IAM_TOKEN" | docker login --username iam --password-stdin cr.yandex
-        
-      - name: Build and Push Docker image
-        run: |
-          docker build -t ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest .
-          docker push ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest
-
-      - name: SSH Deployment
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-          
-          # Передаем IAM токен с GitHub runner на сервер
-          IAM_TOKEN=$(/home/runner/yandex-cloud/bin/yc iam create-token)
-          
+
+      - name: Transfer Docker image to server
+        run: |
+          docker save ${{ env.IMAGE_NAME }}:latest > image.tar
+          scp -i ~/.ssh/deploy_key \
+              -P ${{ secrets.SSH_PORT }} \
+              image.tar \
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:/tmp/image.tar
+
+      - name: Deploy on server
+        run: |
           ssh -i ~/.ssh/deploy_key \
               -p ${{ secrets.SSH_PORT }} \
-              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} \
-              "echo '$IAM_TOKEN' | docker login --username iam --password-stdin cr.yandex && \
-              echo 'Stopping and removing old container...' && \
-              docker stop ${{ env.IMAGE_NAME }} 2>/dev/null || true && \
-              docker rm ${{ env.IMAGE_NAME }} 2>/dev/null || true && \
-              echo 'Pulling new image...' && \
-              docker pull ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
-              echo 'Starting new container...' && \
-              docker run -d \
-                --name ${{ env.IMAGE_NAME }} \
-                --restart unless-stopped \
-                -p ${{ env.HOST_PORT }}:${{ env.CONTAINER_PORT }} \
-                ${{ env.REGISTRY }}/${{ secrets.REGISTRY_ID }}/${{ env.IMAGE_NAME }}:latest && \
-              echo 'Deployment completed successfully!'"
+              ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          set -e  # Выход при ошибке
+          
+          echo "Loading Docker image..."
+          docker load -i /tmp/image.tar
+          
+          echo "Stopping and removing old container..."
+          docker stop clone-vk 2>/dev/null || true
+          docker rm clone-vk 2>/dev/null || true
+          
+          echo "Starting new container..."
+          docker run -d \
+            --name clone-vk \
+            --restart unless-stopped \
+            -p 5002:5000 \
+            clone-vk:latest
+          
+          echo "Cleaning up..."
+          rm -f /tmp/image.tar
+          
+          echo "Deployment completed successfully!"
+          EOF
+
+      - name: Cleanup local files
+        run: |
+          rm -f image.tar
+          rm -f ~/.ssh/deploy_key
