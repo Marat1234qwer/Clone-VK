@@ -44,8 +44,7 @@ jobs:
           set -e  # Выход при ошибке
           
           # Создаем .env файл
-          mkdir -p /app
-          cat > /app/.env << EOL
+          cat > ~/.env << EOL
           FLASK_SECRET_KEY=${{ secrets.FLASK_SECRET_KEY }}
           DB_HOST=${{ secrets.DB_HOST }}
           DB_NAME=${{ secrets.DB_NAME }}
@@ -67,7 +66,7 @@ jobs:
             --name clone-vk \
             --restart unless-stopped \
             -p 5002:5000 \
-            --env-file /app/.env \
+            --env-file ~/.env \
             clone-vk:latest
           
           echo "Cleaning up..."
