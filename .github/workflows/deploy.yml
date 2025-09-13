@@ -41,16 +41,19 @@ jobs:
           ssh -i ~/.ssh/deploy_key \
               -p ${{ secrets.SSH_PORT }} \
               ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-              cat > /app/.env << EOL
-              FLASK_SECRET_KEY=${{ secrets.FLASK_SECRET_KEY }}
-              DB_HOST=${{ secrets.DB_HOST }}
-              DB_NAME=${{ secrets.DB_NAME }}
-              DB_USER=${{ secrets.DB_USER }}
-              DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-              DB_PORT=${{ secrets.DB_PORT }}
-              DB_SSLMODE=${{ secrets.DB_SSLMODE }}
-              EOL
           set -e  # Выход при ошибке
+          
+          # Создаем .env файл
+          mkdir -p /app
+          cat > /app/.env << EOL
+FLASK_SECRET_KEY=${{ secrets.FLASK_SECRET_KEY }}
+DB_HOST=${{ secrets.DB_HOST }}
+DB_NAME=${{ secrets.DB_NAME }}
+DB_USER=${{ secrets.DB_USER }}
+DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+DB_PORT=${{ secrets.DB_PORT }}
+DB_SSLMODE=${{ secrets.DB_SSLMODE }}
+EOL
           
           echo "Loading Docker image..."
           docker load -i /tmp/image.tar
