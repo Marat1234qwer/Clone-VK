@@ -1,4 +1,5 @@
 # Mini-App "VK Clone" on Flask
+## Works on 37.143.10.40:5002
 
 ## Project Description
 
